@@ -1,3 +1,6 @@
 [submodule "Vendor"]
 	path = Vendor/CryptoSwift
 	url = https://github.com/krzyzanowskim/CryptoSwift.git
+[submodule "Vendor/CryptoSwift"]
+	path = Vendor/CryptoSwift
+	url = https://github.com/krzyzanowskim/CryptoSwift.git
