@@ -11,14 +11,16 @@ import CryptoSwift
 
 enum MnemonicError: Error {
     case invalidArgument
+    case invalidEntropy
     case unknownWordlist(phrase: String)
+    case unexpected
 }
 
-enum Language {
+public enum Language {
     case english
     case chinese
     
-    func words() -> [String] {
+    var words: [String] {
         switch self {
         case .english:
             return String.englishMnemonics
@@ -33,58 +35,106 @@ public class Mnemonic {
     
     private var _wordlist: [String]
     
-    // data - a seed, phrase, or entropy to initialize (can be skipped)
-    init(data: Any?, wordlist: [String]) throws {
-        _wordlist = wordlist
+    public init(language: Language = .english) {
+        _wordlist = language.words
         
         _phrase = ""
-        
-        var entropySize = 128
-//        if let seed = data as? Data {
-//
-//        } else if let phrase = data as? String {
-//
-//        } else if let ent = data as? Int {
-//            entropySize = ent
-//        } else if let data = data {
-//            throw MnemonicError.invalidArgument
-//        }
-        
-        let count = entropySize / 8
-        let bytes = Array<UInt8>(repeating: 0, count: count)
-        let status = SecRandomCopyBytes(kSecRandomDefault, count, UnsafeMutablePointer<UInt8>(mutating: bytes))
-        if status != -1 {
-            let data = Data(bytes: bytes)
-//            let hexString = data.toHexString()
-//            return try mnemonicString(from: hexString, language: language)
-        }
+        _phrase = mnemonic(ENT: 128, wordlist: _wordlist)
     }
     
-//    func isValid(mnemonic: String, wordlist: [String]) -> Bool {
-//        let words = mnemonic.components(separatedBy: " ");
-//        var bin = "";
-//
-//        for w in words {
-//            var ind = wordlist.index(of: w);
-//            bin = bin + ("00000000000" + ind.toString(2)).slice(-11)
-//        }
-//        return false
-//    }
+    public init(phrase: String, language: Language = .english) {
+        _wordlist = language.words
+        
+        _phrase = phrase
+    }
     
-    func entropy2mnemonic(entropy: Data, wordlist: [String]) -> String {
+    private func mnemonic(ENT: Int, wordlist: [String]) -> String {
+        guard ENT % 32 == 0 else {
+            return ""
+        }
+        
+        let count = ENT / 8
+        let bytes = Array<UInt8>(repeating: 0, count: count)
+        let status = SecRandomCopyBytes(kSecRandomDefault, count, UnsafeMutablePointer<UInt8>(mutating: bytes))
+        // print(status)
+        if status != -1 {
+            let data = Data(bytes: bytes)
+            let hexString = data.toHexString()
+            
+            return mnemonicString(from: hexString, wordlist: wordlist)
+        }
         
         return ""
     }
     
-    func toSeed() -> Data {
-        return Data()
+    private func mnemonicString(from hexString: String, wordlist: [String]) -> String {
+        let seedData = hexString.ck_mnemonicData()
+        
+        let hashData = seedData.sha256()
+        
+        let checkSum = hashData.ck_toBitArray()
+        
+        var seedBits = seedData.ck_toBitArray()
+        
+        for i in 0..<seedBits.count / 32 {
+            seedBits.append(checkSum[i])
+        }
+        
+        let words = wordlist
+        
+        let mnemonicCount = seedBits.count / 11
+        var mnemonic = [String]()
+        for i in 0..<mnemonicCount {
+            let length = 11
+            let startIndex = i * length
+            let subArray = seedBits[startIndex..<startIndex + length]
+            let subString = subArray.joined(separator: "")
+            // print(subString)
+            
+            let index = Int(strtoul(subString, nil, 2))
+            mnemonic.append(words[index])
+        }
+        return mnemonic.joined(separator: " ")
     }
     
-    func fromSeed(seed: String, wordlist: [String]) throws -> Mnemonic {
-        return try Mnemonic(data: seed, wordlist: wordlist)
+    public func toSeed(passphrase: String = "") throws -> String {
+        func normalized(string: String) -> Data? {
+            guard let data = string.data(using: .utf8, allowLossyConversion: true) else {
+                return nil
+            }
+            
+            guard let dataString = String(data: data, encoding: .utf8) else {
+                return nil
+            }
+            
+            guard let normalizedData = dataString.data(using: .utf8, allowLossyConversion: false) else {
+                return nil
+            }
+            return normalizedData
+        }
+        
+        guard let normalizedData = normalized(string: _phrase) else {
+            return ""
+        }
+        
+        guard let saltData = normalized(string: "mnemonic" + passphrase) else {
+            return ""
+        }
+        
+        let password = normalizedData.bytes
+        let salt = saltData.bytes
+        
+        do {
+            let bytes = try PKCS5.PBKDF2(password: password, salt: salt, iterations: 2048, variant: .sha512).calculate()
+            
+            return bytes.toHexString()
+        } catch {
+            // print(error)
+            throw error
+        }
     }
-
-    func toString() -> String {
+    
+    public func toString() -> String {
         return _phrase
     }
 }
