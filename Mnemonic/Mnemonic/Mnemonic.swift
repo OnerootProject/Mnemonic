@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoSwift
 
 enum MnemonicError: Error {
     case invalidArgument
@@ -71,7 +72,7 @@ public class Mnemonic {
 //    }
     
     func entropy2mnemonic(entropy: Data, wordlist: [String]) -> String {
-        entropy.
+        
         return ""
     }
     
