@@ -1,7 +1,6 @@
 language: objective-c
 osx_image: xcode9.3
 xcode_project: Mnemonic.xcodeproj
-# xcode_workspace: <WORKSPACE_PLACEHOLDER>
 xcode_scheme: Mnemonic
 xcode_sdk: iphonesimulator9.3
 env:
@@ -11,10 +10,16 @@ before_install:
   - brew update
   - brew outdated carthage || brew upgrade carthage
 before_script:
-  # bootstrap the dependencies for the project
-  # you can remove if you don't have dependencies
   - carthage bootstrap
 before_deploy:
   - carthage build --no-skip-current
   - carthage archive $FRAMEWORK_NAME
-
+deploy:
+  provider: releases
+  api_key:
+    secure: bneqQam8PfqZxGygM7hv2x+ZiJzqj+fYLzTNkJ4BZWZHS1PDbnJvwJEIGN84J2KDOMGaixL0QZqyfVoJ4r7bISHbGlqVGnWV2z/A58l5N+YGYMD8uD1Q6bO49VHrVLlTloYoYxK1vlmOh+I7HNEDRRuO0kJe8nx/HUT8LoMk2oay3h4Cv38ldQT9v97E3BHFDl+el0Xt1QEynKvS0xsJewU1LjO0N5XyoCesafWKSw4Tcy/02lW1o/KztXQzLKpFvU+ODOU6w4Vy1ZWNqJWNAPgMPM2Xpwjt2Jjh6yyDsmKtY7DhffrPmxzb4+4YlWKn8LcNB28GJ36MyufxLPRVeK5SUnLitvhJfL9y3YeJRf4R9kXuPHiIkTR8rJbM5Arbl3/RzesbtpymwqtMm5D6566zeBzTAHA2YLtji4Y7wbKHYjIwN2eC+psDTIi+vI6tZSONp9gIvc4BE0Na0OrAL+W/dqHzq4cf+7Waa3d8fq3XJSkC5k4jE2EcOW10M6O78raJXil2Dc/04N6jghEUiWalsG+IEajsemrPHUaxkyXbRl4gQkOpa3SX8EzNWbL18olY40LybDvgBg9gWkB+hgPHBxcmDoSMnJYb75GCL3OZlGTIyfGUYvV0I65jbgFUvyQx8ff54fEQthOOzvGyT2np5ekxYmkoeU9TYXnp2PY=
+  file: "$FRAMEWORK_NAME.framework.zip"
+  skip_cleanup: true
+  on:
+    repo: pengpengliu/Mnemonic
+    tags: true
