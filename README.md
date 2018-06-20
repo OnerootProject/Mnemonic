@@ -21,10 +21,10 @@ $ brew update
 $ brew install carthage
 ```
 
-To integrate Alamofire into your Xcode project using Carthage, specify it in your `Cartfile`:
+To integrate Mnemonic into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "pengpengliu/Mnemonic"
+github "OnerootProject/Mnemonic"
 ```
 
 Run `carthage update` to build the framework and drag the built `Mnemonic.framework` into your Xcode project.
