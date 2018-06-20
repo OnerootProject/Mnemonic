@@ -13,8 +13,7 @@ Pod::Spec.new do |spec|
 
   spec.source = { git: 'https://github.com/onerootproject/Mnemonic.git', tag: "v#{spec.version}" }
   spec.source_files = 'Mnemonic/**/*.{h,m,swift}'
-  spec.private_header_files = 'Mnemonic/**/MnemonicInternal.h'
-  spec.module_map = 'Mnemonic/Mnemonic.modulemap'
+  
   spec.ios.deployment_target = '8.0'
   spec.swift_version = '4.0'
 
